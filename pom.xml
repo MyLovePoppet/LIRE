@@ -68,7 +68,7 @@
 		<build.timestamp>${maven.build.timestamp}</build.timestamp>
 		<build.number/>
 
-		<lucene-core.version>7.5.0</lucene-core.version>
+		<lucene-core.version>8.0.0</lucene-core.version>
 		<commons-math3.version>3.6.1</commons-math3.version>
 		<commons-codec.version>1.10</commons-codec.version>
 		<commons-io.version>2.5</commons-io.version>
@@ -76,6 +76,8 @@
 		<opencv.version>2.4.9-7</opencv.version>
 
 		<junit.version>4.12</junit.version>
+
+		<deeplearning4j.version>1.0.0-beta7</deeplearning4j.version>
 
 		<maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
 		<maven-javadoc-plugin.version>2.10.3</maven-javadoc-plugin.version>
@@ -135,6 +137,24 @@
 			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!--深度学习框架-->
+		<dependency>
+			<groupId>org.deeplearning4j</groupId>
+			<artifactId>deeplearning4j-core</artifactId>
+			<version>${deeplearning4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.deeplearning4j</groupId>
+			<artifactId>deeplearning4j-zoo</artifactId>
+			<version>${deeplearning4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.nd4j</groupId>
+			<artifactId>nd4j-native-platform</artifactId>
+			<version>${deeplearning4j.version}</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

@@ -131,6 +131,8 @@ public interface DocumentBuilder {
     String FIELD_NAME_SIMPLE = "SIMPLE";
 
 
+    String FIELD_NAME_CNN = "CNN";
+
     /**
      * Creates the feature fields for a Lucene Document without creating the document itself.
      *
