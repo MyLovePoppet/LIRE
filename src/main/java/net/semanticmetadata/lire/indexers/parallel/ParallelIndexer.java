@@ -86,6 +86,7 @@ import java.util.logging.Logger;
  * @author Mathias Lux, mathias@juggle.at
  * @author Nektarios Anagnostopoulos, nek.anag@gmail.com
  */
+//shuqy注释于2020/07/26
 public class ParallelIndexer implements Runnable {
     private boolean useDocValues = false;
     private Logger log = Logger.getLogger(this.getClass().getName());
@@ -102,7 +103,7 @@ public class ParallelIndexer implements Runnable {
     private boolean appending = false;
     private boolean globalHashing = false;
     private GlobalDocumentBuilder.HashingMode globalHashingMode = GlobalDocumentBuilder.HashingMode.BitSampling;
-
+    //最终要写入Document的IndexWriter
     private IndexWriter writer;
     private String imageDirectory, indexPath;
     private File imageList = null;
@@ -130,7 +131,7 @@ public class ParallelIndexer implements Runnable {
     // Note that you can edit the queue size here. 100 is a good value, but I'd raise it to 200.
     private int queueCapacity = 200;
     private LinkedBlockingQueue<WorkItem> queue = new LinkedBlockingQueue<>(queueCapacity);
-
+    //这里的WorkItem是封装了一张图像的原始字节，文件名和所有的特征值的对象
 
     public static void main(String[] args) {
         String indexPath = null;
@@ -201,8 +202,8 @@ public class ParallelIndexer implements Runnable {
                 "image-list        ... A list of images in a file, one per line. Use instead of images-directory.\n" +
                 "number of threads ... The number of threads used for extracting features, e.g. # of CPU cores.");
     }
-
-
+    //shuqy注释于2020/07/26
+    //后面这些构造函数可以改成Builder模式进行构建
     public ParallelIndexer(int numOfThreads, String indexPath, String imageDirectory) {
         this.numOfThreads = numOfThreads;
         this.indexPath = indexPath;
@@ -544,15 +545,19 @@ public class ParallelIndexer implements Runnable {
         } else throw new UnsupportedOperationException("Error in trying to find index...");
     }
 
-
+    //将加入的特征提取器进行分类
+    //主要有全局特征提取器-GlobalExtractors和本地（或者是局部？）特征提取器-LocalExtractor
     public void addExtractor(Class<? extends Extractor> extractorClass) {
         if (lockLists) throw new UnsupportedOperationException("Cannot add extractors!");
         ExtractorItem extractorItem = new ExtractorItem(extractorClass);
         boolean flag = true;
+        //全局特征提取器
         if (extractorItem.isGlobal()) {
+            //主要是为了判断加入的特征提取器是否已经之前加入过，如果已经加入过的话就忽略
             for (ExtractorItem next : GlobalExtractors) {
                 if (next.getExtractorClass().equals(extractorClass)) {
                     flag = false;
+                    break;
                 }
             }
             if (flag) {
@@ -560,10 +565,11 @@ public class ParallelIndexer implements Runnable {
             } else {
                 throw new UnsupportedOperationException(extractorClass.getSimpleName() + " already exists!!");
             }
-        } else if (extractorItem.isLocal()) {
+        } else if (extractorItem.isLocal()) {//本地（或者是局部？）特征提取器
             for (Map.Entry<ExtractorItem, LinkedList<Cluster[]>> next : LocalExtractorsAndCodebooks.entrySet()) {
                 if (next.getKey().getExtractorClass().equals(extractorClass)) {
                     flag = false;
+                    break;
                 }
             }
             if (flag) {
@@ -741,7 +747,7 @@ public class ParallelIndexer implements Runnable {
 //        if (!(listForCustomDocumentBuilder.size() > 0)) throw new UnsupportedOperationException("Something is wrong");
     }
 
-
+    //开始建立索引的函数
     public void run() {
         lockLists = true;
         try {
@@ -749,6 +755,7 @@ public class ParallelIndexer implements Runnable {
             writer = LuceneUtils.createIndexWriter(indexPath, overWrite, LuceneUtils.AnalyzerType.WhitespaceAnalyzer);
             if (imageList == null) {
 //                allImages = FileUtils.getAllImages(new File(imageDirectory), true); //TODO: change to readFileLines
+                //读取出所有的图像信息
                 allImages = FileUtils.readFileLines(new File(imageDirectory), true);
             } else {
                 allImages = new LinkedList<String>();
@@ -770,9 +777,9 @@ public class ParallelIndexer implements Runnable {
             }
 
             printSetUp();
-
+            //建立config索引文件，主要存储的是特征提取器的种类
             (new File(indexPath + ".config/")).mkdirs();
-
+            //if(sampling)暂时还不知道是干嘛用的
             if (sampling) {
                 if (customDocBuilderFlag)
                     throw new UnsupportedOperationException("Cannot use sampling and set custom document builder at the same time!!");
@@ -796,7 +803,7 @@ public class ParallelIndexer implements Runnable {
             } else System.out.println("No need for sampling and generating codebooks.....");
 
             numImages = allImages.size();
-            index();
+            index();//开始进行索引操作
 
             System.out.printf("Total time of indexing: %s.\n", convertTime(System.currentTimeMillis() - start));
 
@@ -814,7 +821,7 @@ public class ParallelIndexer implements Runnable {
             e.printStackTrace();
         }
     }
-
+    //将document写入到文件内
     private void flushDocuments() {
         System.out.println("Flushing documents....");
         long start = System.currentTimeMillis();
@@ -828,7 +835,7 @@ public class ParallelIndexer implements Runnable {
         }
         System.out.printf("Time of flushing: %s.\n", convertTime(System.currentTimeMillis() - start));
     }
-
+    //开始进行索引
     private void index() {
         System.out.printf("Indexing %d images\n", numImages);
         long start = System.currentTimeMillis();
@@ -837,11 +844,14 @@ public class ParallelIndexer implements Runnable {
             p = new Thread(new Producer(allImages), "Producer");
             p.start();
             LinkedList<Thread> threads = new LinkedList<Thread>();
+            //建立多个线程
             for (int i = 0; i < numOfThreads; i++) {
+                //这里启动的是Consumer线程，不是其他的GlobalConsumer或者是
                 c = new Thread(new Consumer(), String.format("Consumer-%02d", i + 1));
                 c.start();
                 threads.add(c);
             }
+            //进度条监控线程
             Monitoring monitoring = new Monitoring();
             m = new Thread(monitoring, "IndexingMonitor");
             m.start();
@@ -1011,6 +1021,8 @@ public class ParallelIndexer implements Runnable {
             for (String path : localList) {
                 next = new File(path);
                 try {
+                    //三种读取Image到内存为byte[]的方式
+
                     // option 1 --------------------
 //                    byte[] buffer = Files.readAllBytes(Paths.get(path)); // JDK 7 only!
                     // option 2 --------------------
@@ -1038,6 +1050,7 @@ public class ParallelIndexer implements Runnable {
             }
             String path = null;
             byte[] buffer = null;
+            //后面加一堆空的是为了后续取的时候让每个索引线程都能取到空，来结束每个索引线程
             for (int i = 0; i < numOfThreads * 3; i++) {
                 try {
                     queue.put(new WorkItem(path, buffer));
@@ -1245,16 +1258,20 @@ public class ParallelIndexer implements Runnable {
 //                        while (queue.remainingCapacity() > 2*queueCapacity/3) Thread.sleep(1000);
                         Thread.sleep((long) ((Math.random()/2+0.5) * 10000)); // sleep for a second if queue is empty.
                     }
+                    //如果等了还没有，就代表已经没有了
                     tmp = queue.take();
                     if (tmp.getFileName() == null) locallyEnded = true;
                     else overallCount++;
                     if (!locallyEnded) {    //&& tmp != null
+                        //将WorkItem内的表示的文件的字节转化成Image
                         image = ImageIO.read(new ByteArrayInputStream(tmp.getBuffer()));
 //                        image = ImageUtils.createWorkingCopy(ImageIO.read(new ByteArrayInputStream(tmp.getBuffer())));
+                        //这个不知道干嘛的，也没有实现这个接口的函数
                         if(imagePreprocessor != null){
                             image = imagePreprocessor.process(image);
                         }
                         doc = localCustomDocumentBuilder.createDocument(image, tmp.getFileName());
+                        //这个函数主要是为了创建这张图像的特征值信息，返回的Lucene的Field字段，进行索引
                         fields = globalDocumentBuilder.createDescriptorFields(image);
                         for (Field field : fields) {
                             doc.add(field);
