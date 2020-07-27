@@ -1006,7 +1006,7 @@ public class ParallelIndexer implements Runnable {
     public void setImagePreprocessor(ImagePreprocessor imagePreprocessor) {
         this.imagePreprocessor = imagePreprocessor;
     }
-
+    //生产数据的线程
     class Producer implements Runnable {
         private List<String> localList;
 
@@ -1213,7 +1213,7 @@ public class ParallelIndexer implements Runnable {
             }
         }
     }
-
+    //消费数据的线程
     class Consumer implements Runnable {
         private LocalDocumentBuilder localDocumentBuilder;
         private SimpleDocumentBuilder simpleDocumentBuilder;

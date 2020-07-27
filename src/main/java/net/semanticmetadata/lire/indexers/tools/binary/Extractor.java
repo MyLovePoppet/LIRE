@@ -92,6 +92,7 @@ public class Extractor implements Runnable {
             "net.semanticmetadata.lire.imageanalysis.features.global.LuminanceLayout",       // 13
             "net.semanticmetadata.lire.imageanalysis.features.global.PHOG",                  // 14
             "net.semanticmetadata.lire.imageanalysis.features.global.LocalBinaryPatterns",   // 15
+            "net.semanticmetadata.lire.imageanalysis.features.global.CNN"                    //16
     };
 
     public static final String[] featureFieldNames = new String[]{
@@ -111,6 +112,7 @@ public class Extractor implements Runnable {
             DocumentBuilder.FIELD_NAME_LUMINANCE_LAYOUT,      // 13
             DocumentBuilder.FIELD_NAME_PHOG,                  // 14
             DocumentBuilder.FIELD_NAME_LOCAL_BINARY_PATTERNS, // 15
+            DocumentBuilder.FIELD_NAME_CNN
     };
 
     static HashMap<String, Integer> feature2index;

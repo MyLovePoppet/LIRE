@@ -357,7 +357,7 @@ public class GenericFastImageSearcher extends AbstractImageSearcher {
         }
         return maxDistance;
     }
-
+    //生产者线程，一直从index文件夹内读取数据，放到队列里面。
     class Producer implements Runnable {
 
         private Producer() {
@@ -388,6 +388,10 @@ public class GenericFastImageSearcher extends AbstractImageSearcher {
 
     private class Consumer implements Runnable {
         private boolean locallyEnded = false;
+        //这里使用了一个TreeSet来表示结果，TreeSet可以保证结果唯一且有序，排序的方式为Distance，
+        //如果容器内没有满，那就直接加入，而且需要记录距离的最大值
+        //如果容器满了，就比较当前的距离和容器内最大的距离，
+        // 如果当前距离小于容器内最大的距离的话那就将容器内最后一个数据删除，并重新计算最大的距离
         private TreeSet<SimpleResult> localDocs  = new TreeSet<SimpleResult>();
         private LireFeature localCachedInstance;
         private LireFeature localLireFeature;

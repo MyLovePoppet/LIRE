@@ -215,7 +215,7 @@ public class GlobalDocumentBuilder implements DocumentBuilder {
         Field vector = null;
 
         GlobalFeature globalFeature = extractGlobalFeature(image, (GlobalFeature) extractorItem.getExtractorInstance());
-
+        //extractorItems是包含了所有的特征提取器的一个哈希表，其值是一个String[]表示的是fieldName和fieldName + DocumentBuilder.HASH_FIELD_SUFFIX
         if (!useDocValues) {
             // TODO: Stored field is compressed and upon search decompression takes a lot of time (> 50% with a small index with 50k images). Find something else ...
             vector = new StoredField(extractorItems.get(extractorItem)[0], new BytesRef(globalFeature.getByteArrayRepresentation()));
