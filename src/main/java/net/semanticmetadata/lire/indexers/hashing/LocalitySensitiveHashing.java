@@ -56,6 +56,7 @@ import java.util.zip.GZIPOutputStream;
  * @author Mathias Lux, mathias@juggle.at
  *         Created: 04.06.12, 13:42
  */
+//LSH算法
 public class LocalitySensitiveHashing {
     private static String name = "lshHashFunctions.obj";
     private static int dimensions = 250;           // max d

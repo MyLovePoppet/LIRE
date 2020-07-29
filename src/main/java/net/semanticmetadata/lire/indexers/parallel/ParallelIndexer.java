@@ -125,7 +125,7 @@ public class ParallelIndexer implements Runnable {
     private Class<? extends AbstractAggregator> aggregator = BOVW.class;
 
     private HashMap<String, Document> allDocuments;
-
+    //应该是预处理
     private ImagePreprocessor imagePreprocessor;
 
     // Note that you can edit the queue size here. 100 is a good value, but I'd raise it to 200.
@@ -350,10 +350,10 @@ public class ParallelIndexer implements Runnable {
     /**
      * Constructor for use with hashing.
      *
-     * @param numOfThreads number of threads used for processing.
-     * @param indexPath    the directory the index witll be written to.
-     * @param imageDirectory    the directory where images can be found.
-     * @param hashingMode  the mode used for Hashing, use HashingMode.None if you don't want hashing.
+     * @param numOfThreads   number of threads used for processing.
+     * @param indexPath      the directory the index witll be written to.
+     * @param imageDirectory the directory where images can be found.
+     * @param hashingMode    the mode used for Hashing, use HashingMode.None if you don't want hashing.
      */
     public ParallelIndexer(int numOfThreads, String indexPath, String imageDirectory, GlobalDocumentBuilder.HashingMode hashingMode) {
         this.numOfThreads = numOfThreads;
@@ -390,11 +390,11 @@ public class ParallelIndexer implements Runnable {
     /**
      * Constructor for use with hashing and optional storage in DocValues instead of Lucene fields.
      *
-     * @param numOfThreads number of threads used for processing.
-     * @param indexPath    the directory the index witll be written to.
-     * @param imageDirectory    the directory where the images are to be found.
-     * @param hashingMode  the mode used for Hashing, use HashingMode.None if you don't want hashing.
-     * @param useDocValues set to true if you want to use DocValues instead of Fields.
+     * @param numOfThreads   number of threads used for processing.
+     * @param indexPath      the directory the index witll be written to.
+     * @param imageDirectory the directory where the images are to be found.
+     * @param hashingMode    the mode used for Hashing, use HashingMode.None if you don't want hashing.
+     * @param useDocValues   set to true if you want to use DocValues instead of Fields.
      */
     public ParallelIndexer(int numOfThreads, String indexPath, String imageDirectory, GlobalDocumentBuilder.HashingMode hashingMode, boolean useDocValues) {
         this.numOfThreads = numOfThreads;
@@ -821,6 +821,7 @@ public class ParallelIndexer implements Runnable {
             e.printStackTrace();
         }
     }
+
     //将document写入到文件内
     private void flushDocuments() {
         System.out.println("Flushing documents....");
@@ -835,6 +836,7 @@ public class ParallelIndexer implements Runnable {
         }
         System.out.printf("Time of flushing: %s.\n", convertTime(System.currentTimeMillis() - start));
     }
+
     //开始进行索引
     private void index() {
         System.out.printf("Indexing %d images\n", numImages);
@@ -1006,6 +1008,7 @@ public class ParallelIndexer implements Runnable {
     public void setImagePreprocessor(ImagePreprocessor imagePreprocessor) {
         this.imagePreprocessor = imagePreprocessor;
     }
+
     //生产数据的线程
     class Producer implements Runnable {
         private List<String> localList;
@@ -1114,14 +1117,14 @@ public class ParallelIndexer implements Runnable {
                     if (!locallyEnded) {   //&& tmp != null
                         b = new ByteArrayInputStream(tmp.getBuffer());
                         BufferedImage image = ImageIO.read(b);
-                        if(imagePreprocessor != null){
+                        if (imagePreprocessor != null) {
                             image = imagePreprocessor.process(image);
                         }
                         conSampleMap.put(tmp.getFileName(), (documentBuilder.extractLocalFeatures(image, ((LocalFeatureExtractor) extractorItem.getExtractorInstance())).getFeatures()));
                     }
                 } catch (InterruptedException | IOException e) {
                     log.severe(e.getMessage());
-                }  catch (Exception e) {
+                } catch (Exception e) {
                     log.severe(e.getMessage());
                 }
             }
@@ -1166,7 +1169,7 @@ public class ParallelIndexer implements Runnable {
                     }
                 } catch (InterruptedException e) {
                     log.severe(e.getMessage());
-                }  catch (Exception e) {
+                } catch (Exception e) {
                     log.severe(e.getMessage());
                 }
             }
@@ -1196,7 +1199,7 @@ public class ParallelIndexer implements Runnable {
                     else overallCount++;
                     if (!locallyEnded) {   //&& tmp != null
                         BufferedImage image = ImageIO.read(new ByteArrayInputStream(tmp.getBuffer()));
-                        if(imagePreprocessor != null){
+                        if (imagePreprocessor != null) {
                             image = imagePreprocessor.process(image);
                         }
                         fields = globalDocumentBuilder.createDescriptorFields(image);
@@ -1213,6 +1216,7 @@ public class ParallelIndexer implements Runnable {
             }
         }
     }
+
     //消费数据的线程
     class Consumer implements Runnable {
         private LocalDocumentBuilder localDocumentBuilder;
@@ -1254,9 +1258,9 @@ public class ParallelIndexer implements Runnable {
             BufferedImage image;
             while (!locallyEnded) {
                 try {
-                    if (queue.peek()==null) {
+                    if (queue.peek() == null) {
 //                        while (queue.remainingCapacity() > 2*queueCapacity/3) Thread.sleep(1000);
-                        Thread.sleep((long) ((Math.random()/2+0.5) * 10000)); // sleep for a second if queue is empty.
+                        Thread.sleep((long) ((Math.random() / 2 + 0.5) * 10000)); // sleep for a second if queue is empty.
                     }
                     //如果等了还没有，就代表已经没有了
                     tmp = queue.take();
@@ -1267,7 +1271,7 @@ public class ParallelIndexer implements Runnable {
                         image = ImageIO.read(new ByteArrayInputStream(tmp.getBuffer()));
 //                        image = ImageUtils.createWorkingCopy(ImageIO.read(new ByteArrayInputStream(tmp.getBuffer())));
                         //这个不知道干嘛的，也没有实现这个接口的函数
-                        if(imagePreprocessor != null){
+                        if (imagePreprocessor != null) {
                             image = imagePreprocessor.process(image);
                         }
                         doc = localCustomDocumentBuilder.createDocument(image, tmp.getFileName());
@@ -1287,9 +1291,9 @@ public class ParallelIndexer implements Runnable {
                         writer.addDocument(doc);
                     }
                 } catch (InterruptedException | IOException e) {
-                    log.severe(e.getMessage() + ": " + tmp!=null?tmp.getFileName():"");
+                    log.severe(e.getMessage() + ": " + tmp != null ? tmp.getFileName() : "");
                 } catch (Exception e) {
-                    log.severe(e.getMessage() + ": " + tmp!=null?tmp.getFileName():"");
+                    log.severe(e.getMessage() + ": " + tmp != null ? tmp.getFileName() : "");
                 }
             }
         }
